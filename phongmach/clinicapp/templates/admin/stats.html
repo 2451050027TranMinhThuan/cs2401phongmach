@@ -1,0 +1,58 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<h3 class="text-center text-primary">BÁO CÁO THỐNG KÊ THÁNG {{ month }}/{{ year }}</h3>
+<form method="GET" class="form-inline mb-4">
+    <input type="number" name="month" value="{{ month }}" min="1" max="12" class="form-control mr-2">
+    <input type="number" name="year" value="{{ year }}" class="form-control mr-2">
+    <button class="btn btn-primary">Thống kê</button>
+</form>
+
+<div class="row mb-5">
+    <div class="col-md-6">
+        <h5>Báo cáo doanh thu theo tháng</h5>
+        <table class="table table-bordered">
+            <tr><th>STT</th><th>Ngày</th><th>Số bệnh nhân</th><th>Doanh thu</th><th>Tỷ lệ</th></tr>
+            {% for r in rev_stats %}
+            <tr>
+                <td>{{ loop.index }}</td><td>{{ r[0] }}</td><td>{{ r[1] }}</td>
+                <td>{{ "{:,.0f}".format(r[2]) }}</td>
+                <td>{{ "%.1f"|format((r[2]/total_rev*100) if total_rev else 0) }}%</td>
+            </tr>
+            {% endfor %}
+            <tr><th colspan="3">Tổng doanh thu</th><th colspan="2">{{ "{:,.0f}".format(total_rev) }} VNĐ</th></tr>
+        </table>
+    </div>
+    <div class="col-md-6"><canvas id="revChart"></canvas></div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h5>Báo cáo sử dụng thuốc</h5>
+        <table class="table table-bordered">
+            <tr><th>STT</th><th>Thuốc</th><th>Đơn vị</th><th>Số lượng</th><th>Số lần dùng</th></tr>
+            {% for m in med_stats %}
+            <tr><td>{{ loop.index }}</td><td>{{ m[0] }}</td><td>{{ m[1] }}</td><td>{{ m[2] }}</td><td>{{ m[3] }}</td></tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="col-md-6"><canvas id="medChart"></canvas></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+new Chart(document.getElementById('revChart'), {
+    type: 'bar',
+    data: {
+        labels: [{% for r in rev_stats %}'{{ r[0] }}',{% endfor %}],
+        datasets: [{ label: 'Doanh thu (VNĐ)', data: [{% for r in rev_stats %}{{ r[2] }},{% endfor %}], backgroundColor: 'rgba(54, 162, 235, 0.7)' }]
+    }
+});
+new Chart(document.getElementById('medChart'), {
+    type: 'doughnut',
+    data: {
+        labels: [{% for m in med_stats %}'{{ m[0] }}',{% endfor %}],
+        datasets: [{ data: [{% for m in med_stats %}{{ m[2] }},{% endfor %}], backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0'] }]
+    }
+});
+</script>
+{% endblock %}

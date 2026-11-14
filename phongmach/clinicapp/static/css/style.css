@@ -1,0 +1,59 @@
+/* Tông màu chủ đạo chuẩn y tế cao cấp */
+:root {
+    --medical-blue: #0066b2;
+    --medical-dark: #0b1623;
+    --medical-yellow: #ffc107;
+    --medical-cyan: #1890ff;
+}
+
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* 1. Thanh Top-bar xanh dương trên cùng */
+.top-bar {
+    background-color: var(--medical-blue);
+    color: #ffffff;
+    font-size: 0.85rem;
+    padding: 8px 0;
+}
+
+/* 2. Thanh Navbar tối màu sang trọng */
+.main-navbar {
+    background-color: var(--medical-dark) !important;
+    padding: 12px 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-pill-yellow {
+    background-color: var(--medical-yellow);
+    color: #000;
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 8px 20px;
+    border: none;
+    transition: 0.3s;
+}
+.btn-pill-yellow:hover {
+    background-color: #e0a800;
+    color: #000;
+}
+
+.btn-pill-blue {
+    background-color: var(--medical-cyan);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 50px;
+    padding: 8px 20px;
+    border: none;
+    transition: 0.3s;
+}
+.btn-pill-blue:hover {
+    background-color: #096dd9;
+    color: #fff;
+}
+
+/* 3. Hero Banner & Thanh 3 chức năng vắt ngang */
+.hero-banner {
+    background: linear-gradient(90deg, rgba(11, 22, 35, 0.82) 0%, rgba(11, 22, 35, 0.35) 100%),
+                url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1600&q=80') center/

@@ -1,0 +1,9 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+    {% if current_user.is_authenticated %}
+        <h2 class="text-primary">CHÀO MỪNG {{ current_user.name }} ĐẾN TRANG QUẢN TRỊ PHÒNG MẠCH</h2>
+        <p>Sử dụng thanh menu phía trên để quản lý thuốc, đơn vị thuốc, thay đổi quy định và xem thống kê báo cáo.</p>
+    {% else %}
+        <div class="alert alert-warning">Vui lòng <a href="/login">đăng nhập tài khoản Quản trị (Admin)</a> để truy cập trang này.</div>
+    {% endif %}
+{% endblock %}

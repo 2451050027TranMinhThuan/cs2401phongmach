@@ -1,0 +1,32 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">🏥 PHÒNG MẠCH TÂM AN</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link active" href="/">Trang chủ</a></li>
+                {% if current_user.is_authenticated %}
+                    {% if current_user.user_role == UserRole.NURSE or current_user.user_role == UserRole.ADMIN %}
+                        <li class="nav-item"><a class="nav-link" href="/nurse">Danh sách khám (Y tá)</a></li>
+                    {% endif %}
+                    {% if current_user.user_role == UserRole.DOCTOR or current_user.user_role == UserRole.ADMIN %}
+                        <li class="nav-item"><a class="nav-link" href="/doctor">Lập phiếu khám (Bác sĩ)</a></li>
+                    {% endif %}
+                    {% if current_user.user_role == UserRole.CASHIER or current_user.user_role == UserRole.ADMIN %}
+                        <li class="nav-item"><a class="nav-link" href="/cashier">Thanh toán (Thu ngân)</a></li>
+                    {% endif %}
+                    {% if current_user.user_role == UserRole.ADMIN %}
+                        <li class="nav-item"><a class="nav-link text-warning fw-bold" href="/admin">Trang Quản Trị</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            <ul class="navbar-nav">
+                {% if current_user.is_authenticated %}
+                    <li class="nav-item"><span class="nav-link text-white">Xin chào, <b>{{ current_user.name }}</b></span></li>
+                    <li class="nav-item"><a class="btn btn-sm btn-outline-light ms-2 mt-1" href="/logout">Đăng xuất</a></li>
+                {% else %}
+                    <li class="nav-item"><a class="btn btn-sm btn-light text-primary fw-bold" href="/login">Đăng nhập nhân viên</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>

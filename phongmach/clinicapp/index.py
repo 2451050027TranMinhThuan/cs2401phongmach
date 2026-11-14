@@ -1,0 +1,181 @@
+from flask import render_template, request, redirect, url_for, flash
+from clinicapp import app, db, login, dao, admin
+from clinicapp.models import BenhNhan, DanhSachKham, PhieuKham, ChiTietToaThuoc, HoaDon, UserRole
+from flask_login import login_user, logout_user, current_user, login_required
+from datetime import datetime, date
+
+
+@login.user_loader
+def load_user(user_id):
+    return dao.get_user_by_id(user_id)
+
+
+@app.context_processor
+def common_responses():
+    return {
+        'UserRole': UserRole,
+        'quy_dinh': dao.get_quy_dinh()
+    }
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login_process():
+    err_msg = ''
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = dao.auth_user(username=username, password=password)
+        if user:
+            login_user(user=user)
+            if user.user_role == UserRole.ADMIN:
+                return redirect('/admin')
+            elif user.user_role == UserRole.DOCTOR:
+                return redirect(url_for('doctor_page'))
+            elif user.user_role == UserRole.CASHIER:
+                return redirect(url_for('cashier_page'))
+            return redirect(url_for('nurse_page'))
+        else:
+            err_msg = 'Tên đăng nhập hoặc mật khẩu không chính xác!'
+    return render_template('login.html', err_msg=err_msg)
+
+
+@app.route('/logout')
+def logout_process():
+    logout_user()
+    return redirect(url_for('index'))
+
+
+# TRANG CHỦ CÔNG KHAI: GIỚI THIỆU PHÒNG MẠCH & ĐẶT LỊCH KHÁM TRỰC TUYẾN
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    ngay_str = str(date.today())
+    qd = dao.get_quy_dinh()
+
+    if request.method == 'POST':
+        ngay_dat_str = request.form.get('ngay_kham', ngay_str)
+        ngay_dat = datetime.strptime(ngay_dat_str, '%Y-%m-%d').date()
+        ds_kham = dao.load_danh_sach_kham(ngay_dat)
+
+        if len(ds_kham) >= qd.so_benh_nhan_toi_da:
+            flash(f'Rất tiếc! Ngày {ngay_dat} đã đủ {qd.so_benh_nhan_toi_da} bệnh nhân. Vui lòng chọn ngày khác!', 'danger')
+        else:
+            bn = BenhNhan(
+                ho_ten=request.form.get('ho_ten'),
+                gioi_tinh=request.form.get('gioi_tinh'),
+                nam_sinh=int(request.form.get('nam_sinh')),
+                dia_chi=request.form.get('dia_chi'),
+                so_dien_thoai=request.form.get('so_dien_thoai')
+            )
+            db.session.add(bn)
+            db.session.flush()
+
+            dsk = DanhSachKham(ngay_kham=ngay_dat, benh_nhan_id=bn.id)
+            db.session.add(dsk)
+            db.session.commit()
+
+            dao.send_sms_twilio(bn.so_dien_thoai, f"Phong mach Tam An: Ban da dat lich kham ngay {ngay_dat} thanh cong.")
+            flash(f'Đặt lịch khám ngày {ngay_dat} thành công! Tin nhắn SMS xác nhận đã được gửi.', 'success')
+        return redirect(url_for('index'))
+
+    return render_template('index.html', ngay_kham=ngay_str)
+
+
+# YÊU CẦU 1: TRANG NỘI BỘ Y TÁ XEM & LẬP DANH SÁCH KHÁM
+@app.route('/nurse', methods=['GET', 'POST'])
+@login_required
+def nurse_page():
+    ngay_str = request.args.get('ngay_kham', str(date.today()))
+    ngay_kham = datetime.strptime(ngay_str, '%Y-%m-%d').date()
+    qd = dao.get_quy_dinh()
+    ds_kham = dao.load_danh_sach_kham(ngay_kham)
+
+    if request.method == 'POST':
+        if len(ds_kham) >= qd.so_benh_nhan_toi_da:
+            flash(f'Quy định: Mỗi ngày chỉ khám tối đa {qd.so_benh_nhan_toi_da} bệnh nhân!', 'danger')
+        else:
+            bn = BenhNhan(
+                ho_ten=request.form.get('ho_ten'),
+                gioi_tinh=request.form.get('gioi_tinh'),
+                nam_sinh=int(request.form.get('nam_sinh')),
+                dia_chi=request.form.get('dia_chi'),
+                so_dien_thoai=request.form.get('so_dien_thoai')
+            )
+            db.session.add(bn)
+            db.session.flush()
+
+            dsk = DanhSachKham(ngay_kham=ngay_kham, benh_nhan_id=bn.id)
+            db.session.add(dsk)
+            db.session.commit()
+
+            dao.send_sms_twilio(bn.so_dien_thoai, f"Phong mach Tam An: Ban da dang ky kham ngay {ngay_kham} thanh cong.")
+            flash('Đã thêm bệnh nhân vào danh sách khám & gửi SMS!', 'success')
+        return redirect(url_for('nurse_page', ngay_kham=ngay_str))
+
+    return render_template('nurse.html', ds_kham=ds_kham, ngay_kham=ngay_str)
+
+
+# YÊU CẦU 2: BÁC SĨ LẬP PHIẾU KHÁM
+@app.route('/doctor', methods=['GET', 'POST'])
+@login_required
+def doctor_page():
+    ds_cho = dao.load_danh_sach_kham(date.today(), trang_thai='Chờ khám')
+    kw = request.args.get('kw')
+    thuocs = dao.load_thuocs(kw=kw)
+    bn_id = request.args.get('bn_id')
+    dsk_id = request.args.get('dsk_id')
+
+    bn_chon = BenhNhan.query.get(bn_id) if bn_id else None
+    lich_su = PhieuKham.query.filter_by(benh_nhan_id=bn_id).all() if bn_id else []
+
+    if request.method == 'POST':
+        pk = PhieuKham(
+            ngay_kham=date.today(),
+            trieu_chung=request.form.get('trieu_chung'),
+            du_doan_benh=request.form.get('du_doan_benh'),
+            benh_nhan_id=int(request.form.get('benh_nhan_id')),
+            bac_si_id=current_user.id
+        )
+        db.session.add(pk)
+        db.session.flush()
+
+        for t_id, sl, cd in zip(request.form.getlist('thuoc_id[]'),
+                                request.form.getlist('so_luong[]'),
+                                request.form.getlist('cach_dung[]')):
+            if t_id and int(sl) > 0:
+                db.session.add(ChiTietToaThuoc(phieu_kham_id=pk.id, thuoc_id=int(t_id),
+                                               so_luong=int(sl), cach_dung=cd))
+
+        dsk = DanhSachKham.query.get(int(request.form.get('dsk_id')))
+        dsk.trang_thai = 'Đã khám'
+        db.session.commit()
+        flash('Lưu phiếu khám bệnh thành công!', 'success')
+        return redirect(url_for('doctor_page'))
+
+    return render_template('doctor.html', ds_cho=ds_cho, thuocs=thuocs,
+                           bn_chon=bn_chon, lich_su=lich_su, dsk_id=dsk_id)
+
+
+# YÊU CẦU 3: THU NGÂN THANH TOÁN HÓA ĐƠN
+@app.route('/cashier', methods=['GET', 'POST'])
+@login_required
+def cashier_page():
+    qd = dao.get_quy_dinh()
+    phieu_chua_tt = PhieuKham.query.filter(~PhieuKham.hoa_don.has()).all()
+
+    if request.method == 'POST':
+        pk = PhieuKham.query.get(int(request.form.get('pk_id')))
+        tien_thuoc = sum(ct.so_luong * ct.thuoc.don_gia for ct in pk.chi_tiet_toas)
+        tong_tien = qd.tien_kham + tien_thuoc
+
+        hd = HoaDon(phieu_kham_id=pk.id, tien_kham=qd.tien_kham,
+                    tien_thuoc=tien_thuoc, tong_tien=tong_tien)
+        db.session.add(hd)
+        db.session.commit()
+        flash(f'Thanh toán hoàn tất! Tổng tiền: {tong_tien:,.0f} VNĐ', 'success')
+        return redirect(url_for('cashier_page'))
+
+    return render_template('cashier.html', phieu_chua_tt=phieu_chua_tt)
+
+
+if __name__ == '__main__':
+    app.run(debug=True)

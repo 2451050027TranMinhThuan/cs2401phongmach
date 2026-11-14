@@ -1,0 +1,26 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<h3 class="text-primary">HOÁ ĐƠN THANH TOÁN</h3>
+<table class="table table-bordered bg-white">
+    <thead class="table-dark"><tr><th>Họ tên</th><th>Ngày khám</th><th>Tiền khám</th><th>Tiền thuốc</th><th>Tổng tiền</th><th>Thao tác</th></tr></thead>
+    <tbody>
+    {% for pk in phieu_chua_tt %}
+        {% set t_thuoc = namespace(val=0) %}
+        {% for ct in pk.chi_tiet_toas %}{% set t_thuoc.val = t_thuoc.val + ct.so_luong * ct.thuoc.don_gia %}{% endfor %}
+        <tr>
+            <td>{{ pk.benh_nhan.ho_ten }}</td>
+            <td>{{ pk.ngay_kham }}</td>
+            <td>{{ "{:,.0f}".format(quy_dinh.tien_kham) }} VNĐ</td>
+            <td>{{ "{:,.0f}".format(t_thuoc.val) }} VNĐ</td>
+            <td class="fw-bold text-danger">{{ "{:,.0f}".format(quy_dinh.tien_kham + t_thuoc.val) }} VNĐ</td>
+            <td>
+                <form method="POST">
+                    <input type="hidden" name="pk_id" value="{{ pk.id }}">
+                    <button class="btn btn-sm btn-success">Thanh toán</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="text-primary fw-bold">DANH SÁCH KHÁM BỆNH ({{ ds_kham|length }}/{{ quy_dinh.so_benh_nhan_toi_da }})</h3>
+    <form method="GET" class="d-flex gap-2">
+        <input type="date" name="ngay_kham" value="{{ ngay_kham }}" class="form-control">
+        <button class="btn btn-outline-primary text-nowrap">Lọc theo ngày</button>
+    </form>
+</div>
+
+<form method="POST" class="card p-4 mb-4 shadow-sm border-0">
+    <h6 class="fw-bold text-secondary mb-3">Tiếp nhận bệnh nhân trực tiếp tại phòng khám</h6>
+    <div class="row g-3">
+        <div class="col-md-3"><input type="text" name="ho_ten" placeholder="Họ tên bệnh nhân" class="form-control" required></div>
+        <div class="col-md-2">
+            <select name="gioi_tinh" class="form-select"><option value="Nam">Nam</option><option value="Nữ">Nữ</option></select>
+        </div>
+        <div class="col-md-2"><input type="number" name="nam_sinh" placeholder="Năm sinh" class="form-control" required></div>
+        <div class="col-md-3"><input type="text" name="dia_chi" placeholder="Địa chỉ" class="form-control" required></div>
+        <div class="col-md-2"><input type="text" name="so_dien_thoai" placeholder="SĐT nhận SMS" class="form-control" required></div>
+    </div>
+    <button class="btn btn-primary mt-3 fw-bold">Thêm vào danh sách & Gửi SMS</button>
+</form>
+
+<div class="card shadow-sm border-0">
+    <table class="table table-hover align-middle mb-0 bg-white">
+        <thead class="table-primary">
+            <tr><th>STT</th><th>Họ tên</th><th>Giới tính</th><th>Năm sinh</th><th>Địa chỉ</th><th>SĐT</th><th>Trạng thái</th></tr>
+        </thead>
+        <tbody>
+        {% for item in ds_kham %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td class="fw-bold">{{ item.benh_nhan.ho_ten }}</td>
+                <td>{{ item.benh_nhan.gioi_tinh }}</td>
+                <td>{{ item.benh_nhan.nam_sinh }}</td>
+                <td>{{ item.benh_nhan.dia_chi }}</td>
+                <td>{{ item.benh_nhan.so_dien_thoai }}</td>
+                <td><span class="badge bg-info text-dark">{{ item.trang_thai }}</span></td>
+            </tr>
+        {% else %}
+            <tr><td colspan="7" class="text-center text-muted py-4">Chưa có bệnh nhân nào đăng ký trong ngày {{ ngay_kham }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

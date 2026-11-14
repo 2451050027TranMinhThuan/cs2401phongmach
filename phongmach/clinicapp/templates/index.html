@@ -1,0 +1,105 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<!-- HERO BANNER -->
+<div class="row align-items-center bg-white rounded-4 shadow-sm p-4 p-md-5 mb-5">
+    <div class="col-lg-6">
+        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill mb-3 fw-semibold">
+            Chăm sóc sức khỏe tận tâm & Chuyên nghiệp
+        </span>
+        <h1 class="display-5 fw-bold text-dark mb-3">Phòng Mạch Đa Khoa <span class="text-primary">Tâm An</span></h1>
+        <p class="lead text-muted mb-4">
+            Đội ngũ bác sĩ giàu kinh nghiệm, trang thiết bị hiện đại cùng hệ thống đặt lịch khám trực tuyến nhanh chóng — không cần chờ đợi lâu.
+        </p>
+        <div class="d-flex gap-3">
+            <a href="#dat-lich-kham" class="btn btn-primary btn-lg px-4 rounded-pill shadow-sm">Đặt lịch khám ngay</a>
+            <a href="#dich-vu" class="btn btn-outline-secondary btn-lg px-4 rounded-pill">Tìm hiểu dịch vụ</a>
+        </div>
+    </div>
+    <div class="col-lg-6 mt-4 mt-lg-0 text-center">
+        <img src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=800&q=80"
+             alt="Bác sĩ phòng mạch" class="img-fluid rounded-4 shadow">
+    </div>
+</div>
+
+<!-- THÔNG SỐ & DỊCH VỤ NỔI BẬT -->
+<div id="dich-vu" class="row g-4 mb-5 text-center">
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
+            <div class="fs-1 text-primary mb-2">🩺</div>
+            <h5 class="fw-bold">Khám & Tư vấn Nội tổng quát</h5>
+            <p class="text-muted small mb-0">Chẩn đoán chính xác triệu chứng, theo dõi bệnh sử điện tử toàn diện cho từng bệnh nhân.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
+            <div class="fs-1 text-primary mb-2">💊</div>
+            <h5 class="fw-bold">Nhà thuốc đạt chuẩn GPP</h5>
+            <p class="text-muted small mb-0">Danh mục thuốc đa dạng, nguồn gốc rõ ràng, kê toa điện tử minh bạch chi phí.</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
+            <div class="fs-1 text-primary mb-2">📲</div>
+            <h5 class="fw-bold">Nhắc lịch tự động qua SMS</h5>
+            <p class="text-muted small mb-0">Giới hạn tối đa {{ quy_dinh.so_benh_nhan_toi_da }} lượt khám/ngày giúp bác sĩ chăm sóc kỹ lưỡng từng người bệnh.</p>
+        </div>
+    </div>
+</div>
+
+<!-- FORM ĐẶT LỊCH KHÁM TRỰC TUYẾN CHO BỆNH NHÂN -->
+<div id="dat-lich-kham" class="row justify-content-center mb-4">
+    <div class="col-lg-10">
+        <div class="card border-0 shadow rounded-4 overflow-hidden">
+            <div class="row g-0">
+                <div class="col-md-5 bg-primary text-white p-4 p-md-5 d-flex flex-column justify-content-between">
+                    <div>
+                        <h3 class="fw-bold mb-3">Đặt Lịch Khám Trực Tuyến</h3>
+                        <p class="opacity-75">Điền thông tin cá nhân và ngày mong muốn khám. Hệ thống sẽ gửi tin nhắn SMS xác nhận ngay lập tức.</p>
+                    </div>
+                    <div class="small opacity-75">
+                        <p class="mb-1">⏰ Giờ làm việc: 07:30 - 20:00 (Thứ 2 - CN)</p>
+                        <p class="mb-1">💰 Phí khám tiêu chuẩn: {{ "{:,.0f}".format(quy_dinh.tien_kham) }} VNĐ</p>
+                        <p class="mb-0">📍 Địa chỉ: 123 Nguyễn Văn Cừ, Q.5, TP.HCM</p>
+                    </div>
+                </div>
+                <div class="col-md-7 bg-white p-4 p-md-5">
+                    <form method="POST">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold">Họ và tên bệnh nhân *</label>
+                                <input type="text" name="ho_ten" class="form-control" placeholder="Nguyễn Văn A" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Giới tính *</label>
+                                <select name="gioi_tinh" class="form-select">
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Năm sinh *</label>
+                                <input type="number" name="nam_sinh" class="form-control" placeholder="VD: 1995" min="1900" max="2026" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Số điện thoại nhận SMS *</label>
+                                <input type="text" name="so_dien_thoai" class="form-control" placeholder="090xxxxxxx" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Ngày muốn khám *</label>
+                                <input type="date" name="ngay_kham" value="{{ ngay_kham }}" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Địa chỉ *</label>
+                                <input type="text" name="dia_chi" class="form-control" placeholder="Quận/Huyện, Tỉnh/TP" required>
+                            </div>
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">Xác nhận đặt lịch khám</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

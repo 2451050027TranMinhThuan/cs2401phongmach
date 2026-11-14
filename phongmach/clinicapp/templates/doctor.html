@@ -1,0 +1,56 @@
+{% extends 'layout/base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <h5 class="text-primary">Bệnh nhân chờ khám</h5>
+        <div class="list-group">
+            {% for dsk in ds_cho %}
+            <a href="/doctor?bn_id={{ dsk.benh_nhan.id }}&dsk_id={{ dsk.id }}"
+               class="list-group-item list-group-item-action d-flex justify-content-between">
+                <span>{{ dsk.benh_nhan.ho_ten }} ({{ dsk.benh_nhan.nam_sinh }})</span>
+                <span class="badge bg-success">Khám</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col-md-8">
+        {% if bn_chon %}
+        <form method="POST" class="card p-3 shadow-sm">
+            <h4 class="text-center">PHIẾU KHÁM BỆNH</h4>
+            <p><b>Họ tên:</b> {{ bn_chon.ho_ten }} | <b>Năm sinh:</b> {{ bn_chon.nam_sinh }}</p>
+            <input type="hidden" name="benh_nhan_id" value="{{ bn_chon.id }}">
+            <input type="hidden" name="dsk_id" value="{{ dsk_id }}">
+            <div class="mb-2"><input type="text" name="trieu_chung" placeholder="Triệu chứng" class="form-control" required></div>
+            <div class="mb-3"><input type="text" name="du_doan_benh" placeholder="Dự đoán loại bệnh" class="form-control" required></div>
+
+            <h6>Kê toa thuốc</h6>
+            <div id="medicine-list">
+                <div class="row g-2 mb-2">
+                    <div class="col-md-5">
+                        <select name="thuoc_id[]" class="form-select">
+                            <option value="">-- Chọn thuốc --</option>
+                            {% for t in thuocs %}
+                            <option value="{{ t.id }}">{{ t.ten_thuoc }} ({{ t.don_vi.ten_don_vi }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2"><input type="number" name="so_luong[]" value="1" min="1" class="form-control"></div>
+                    <div class="col-md-5"><input type="text" name="cach_dung[]" placeholder="Cách dùng" class="form-control"></div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mb-3" onclick="addMedicineRow()">+ Thêm thuốc</button>
+            <button type="submit" class="btn btn-primary">Lưu phiếu khám</button>
+        </form>
+
+        <h6 class="mt-4">Lịch sử khám bệnh</h6>
+        <ul class="list-group">
+            {% for ls in lich_su %}
+            <li class="list-group-item">Ngày {{ ls.ngay_kham }}: {{ ls.trieu_chung }} - <b>{{ ls.du_doan_benh }}</b></li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="alert alert-info">Chọn một bệnh nhân ở cột bên trái để lập phiếu khám.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
