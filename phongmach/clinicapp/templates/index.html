@@ -16,8 +16,7 @@
         </div>
     </div>
     <div class="col-lg-6 mt-4 mt-lg-0 text-center">
-        <img src="https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=800&q=80"
-             alt="Bác sĩ phòng mạch" class="img-fluid rounded-4 shadow">
+        <img src="{{ url_for('static', filename='images/TChu.png') }}" alt="Bác sĩ phòng mạch" class="img-fluid rounded-4 shadow">
     </div>
 </div>
 
@@ -93,8 +92,14 @@
                                 <input type="text" name="dia_chi" class="form-control" placeholder="Quận/Huyện, Tỉnh/TP" required>
                             </div>
                             <div class="col-12 mt-4">
-                                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">Xác nhận đặt lịch khám</button>
-                            </div>
+                                {% if current_user.is_authenticated %}
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">Xác nhận đặt lịch khám</button>
+                                {% else %}
+                                    <div class="alert alert-warning text-center mb-0">
+                                        Vui lòng <a href="/login" class="fw-bold text-decoration-underline">đăng nhập</a> hoặc
+                                        <a href="/register" class="fw-bold text-decoration-underline">đăng ký tài khoản</a> để đặt lịch khám!
+                                    </div>
+                                {% endif %}
                         </div>
                     </form>
                 </div>

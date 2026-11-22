@@ -54,27 +54,47 @@ def send_sms_twilio(phone, message):
         return False
 
 
-def stats_revenue_by_month(month, year):
-    return db.session.query(
-        HoaDon.ngay_thanh_toan,
+def stats_revenue_by_time(year=None, time='month'):
+    if time == 'quarter':
+        time_col = func.ceil(extract('month', HoaDon.ngay_thanh_toan) / 3.0).label('time_unit')
+    else:
+        time_col = extract(time, HoaDon.ngay_thanh_toan).label('time_unit')
+
+    query = db.session.query(
+        time_col,
         func.count(HoaDon.id),
         func.sum(HoaDon.tong_tien)
-    ).filter(
-        extract('month', HoaDon.ngay_thanh_toan) == month,
-        extract('year', HoaDon.ngay_thanh_toan) == year
-    ).group_by(HoaDon.ngay_thanh_toan).all()
+    )
+
+    if year:
+        query = query.filter(extract('year', HoaDon.ngay_thanh_toan) == int(year))
+
+    return query.group_by(time_col).order_by(time_col).all()
 
 
-def stats_medicine_by_month(month, year):
-    return db.session.query(
+def stats_medicine_usage(kw=None, year=None, time='month'):
+    query = db.session.query(
         Thuoc.ten_thuoc,
         DonViThuoc.ten_don_vi,
         func.sum(ChiTietToaThuoc.so_luong),
         func.count(ChiTietToaThuoc.id)
     ).join(DonViThuoc, Thuoc.don_vi_id.__eq__(DonViThuoc.id))\
      .join(ChiTietToaThuoc, ChiTietToaThuoc.thuoc_id.__eq__(Thuoc.id))\
-     .join(PhieuKham, ChiTietToaThuoc.phieu_kham_id.__eq__(PhieuKham.id))\
-     .filter(
-        extract('month', PhieuKham.ngay_kham) == month,
-        extract('year', PhieuKham.ngay_kham) == year
-    ).group_by(Thuoc.id, DonViThuoc.ten_don_vi).all()
+     .join(PhieuKham, ChiTietToaThuoc.phieu_kham_id.__eq__(PhieuKham.id))
+
+    if kw:
+        query = query.filter(Thuoc.ten_thuoc.contains(kw.strip()))
+
+    if year:
+        query = query.filter(extract('year', PhieuKham.ngay_kham) == int(year))
+
+    return query.group_by(Thuoc.id, Thuoc.ten_thuoc, DonViThuoc.ten_don_vi).all()
+
+def create_user(name, username, password):
+    password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+    u = User(name=name.strip(),
+             username=username.strip(),
+             password=password,
+             user_role=UserRole.PATIENT)
+    db.session.add(u)
+    db.session.commit()

@@ -3,7 +3,14 @@ from clinicapp import app, db, login, dao, admin
 from clinicapp.models import BenhNhan, DanhSachKham, PhieuKham, ChiTietToaThuoc, HoaDon, UserRole
 from flask_login import login_user, logout_user, current_user, login_required
 from datetime import datetime, date
+from sqlalchemy import text
 
+with app.app_context():
+    try:
+        db.session.execute(text("ALTER TABLE user MODIFY user_role ENUM('ADMIN','NURSE','DOCTOR','CASHIER','PATIENT')"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 @login.user_loader
 def load_user(user_id):
@@ -33,6 +40,8 @@ def login_process():
                 return redirect(url_for('doctor_page'))
             elif user.user_role == UserRole.CASHIER:
                 return redirect(url_for('cashier_page'))
+            elif user.user_role == UserRole.PATIENT:
+                return redirect(url_for('index'))
             return redirect(url_for('nurse_page'))
         else:
             err_msg = 'Tên đăng nhập hoặc mật khẩu không chính xác!'
@@ -44,14 +53,36 @@ def logout_process():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/register', methods=['GET', 'POST'])
+def register_process():
+    err_msg = ''
+    if request.method == 'POST':
+        name = request.form.get('name')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm = request.form.get('confirm')
 
-# TRANG CHỦ CÔNG KHAI: GIỚI THIỆU PHÒNG MẠCH & ĐẶT LỊCH KHÁM TRỰC TUYẾN
+        if not password or not confirm or password != confirm:
+            err_msg = 'Mật khẩu xác nhận không khớp!'
+        else:
+            try:
+                dao.create_user(name=name, username=username, password=password)
+                flash('Đăng ký tài khoản thành công! Vui lòng đăng nhập.', 'success')
+                return redirect(url_for('login_process'))
+            except Exception as ex:
+                db.session.rollback()
+                err_msg = f'Lỗi đăng ký: {str(ex)}'
+
+    return render_template('register.html', err_msg=err_msg)
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     ngay_str = str(date.today())
     qd = dao.get_quy_dinh()
 
     if request.method == 'POST':
+        if not current_user.is_authenticated:
+            return redirect(url_for('login_process'))
         ngay_dat_str = request.form.get('ngay_kham', ngay_str)
         ngay_dat = datetime.strptime(ngay_dat_str, '%Y-%m-%d').date()
         ds_kham = dao.load_danh_sach_kham(ngay_dat)
@@ -79,8 +110,6 @@ def index():
 
     return render_template('index.html', ngay_kham=ngay_str)
 
-
-# YÊU CẦU 1: TRANG NỘI BỘ Y TÁ XEM & LẬP DANH SÁCH KHÁM
 @app.route('/nurse', methods=['GET', 'POST'])
 @login_required
 def nurse_page():
@@ -113,8 +142,6 @@ def nurse_page():
 
     return render_template('nurse.html', ds_kham=ds_kham, ngay_kham=ngay_str)
 
-
-# YÊU CẦU 2: BÁC SĨ LẬP PHIẾU KHÁM
 @app.route('/doctor', methods=['GET', 'POST'])
 @login_required
 def doctor_page():
@@ -154,8 +181,6 @@ def doctor_page():
     return render_template('doctor.html', ds_cho=ds_cho, thuocs=thuocs,
                            bn_chon=bn_chon, lich_su=lich_su, dsk_id=dsk_id)
 
-
-# YÊU CẦU 3: THU NGÂN THANH TOÁN HÓA ĐƠN
 @app.route('/cashier', methods=['GET', 'POST'])
 @login_required
 def cashier_page():

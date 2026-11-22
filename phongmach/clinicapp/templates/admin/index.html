@@ -1,9 +1,74 @@
 {% extends 'admin/master.html' %}
+
 {% block body %}
-    {% if current_user.is_authenticated %}
-        <h2 class="text-primary">CHÀO MỪNG {{ current_user.name }} ĐẾN TRANG QUẢN TRỊ PHÒNG MẠCH</h2>
-        <p>Sử dụng thanh menu phía trên để quản lý thuốc, đơn vị thuốc, thay đổi quy định và xem thống kê báo cáo.</p>
-    {% else %}
-        <div class="alert alert-warning">Vui lòng <a href="/login">đăng nhập tài khoản Quản trị (Admin)</a> để truy cập trang này.</div>
-    {% endif %}
+
+{% if current_user.is_authenticated %}
+
+<div class="alert alert-info mt-2">
+    <h3>Chào mừng <span class="text-success">{{ current_user.name }}</span> đến trang quản trị phòng mạch!</h3>
+    <p class="mb-0">Sử dụng thanh menu phía trên để quản lý thuốc, đơn vị thuốc, thay đổi quy định và xem thống kê báo cáo.</p>
+</div>
+
+<div class="row">
+    <div class="col-5">
+        <table class="table">
+            <tr>
+                <th>Id</th>
+                <th>Đơn vị thuốc</th>
+                <th>Số lượng thuốc</th>
+            </tr>
+            {% for s in stats %}
+            <tr>
+                <td>{{ s[0] }}</td>
+                <td>{{ s[1] }}</td>
+                <td>{{ s[2] or 0 }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    <div class="col-7">
+        <div>
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+</div>
+
+{% else %}
+
+<h1 class="text-center text-success mt-2">ĐĂNG NHẬP QUẢN TRỊ</h1>
+{% if err_msg %}
+<div class="alert alert-danger">
+    {{ err_msg }}
+</div>
+{% endif %}
+
+<form method="post" action="/login">
+    <div class="form-group">
+        <label for="username">Tên đăng nhập:</label>
+        <input type="text" class="form-control" placeholder="Tên đăng nhập" id="username" name="username" />
+    </div>
+    <div class="form-group">
+        <label for="pwd">Mật khẩu:</label>
+        <input type="password" class="form-control" placeholder="Mật khẩu" id="pwd" name="password" />
+    </div>
+    <button type="submit" class="btn btn-primary">Đăng nhập</button>
+</form>
+
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/draw.js') }}"></script>
+<script>
+    let data = [];
+    let labels = [];
+
+    {% for s in stats %}
+        labels.push('{{ s[1] }}');
+        data.push({{ s[2] or 0 }});
+    {% endfor %}
+
+    window.onload = function() {
+        drawChart(data, labels, 'Số lượng');
+    }
+</script>
 {% endblock %}

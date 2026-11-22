@@ -1,58 +1,110 @@
 {% extends 'admin/master.html' %}
+
 {% block body %}
-<h3 class="text-center text-primary">BÁO CÁO THỐNG KÊ THÁNG {{ month }}/{{ year }}</h3>
-<form method="GET" class="form-inline mb-4">
-    <input type="number" name="month" value="{{ month }}" min="1" max="12" class="form-control mr-2">
-    <input type="number" name="year" value="{{ year }}" class="form-control mr-2">
-    <button class="btn btn-primary">Thống kê</button>
+<h1 class="text-center text-success mt-2">THỐNG KÊ & BÁO CÁO PHÒNG MẠCH</h1>
+
+<form method="get" action="">
+    <div class="row">
+        <div class="col-12 p-2">
+            <input type="text" placeholder="Nhập tên thuốc..." name="kw" value="{{ kw or '' }}" class="form-control" />
+        </div>
+        <div class="col-6 p-2">
+            <select name="time" class="form-control">
+                <option value="month" {% if time == 'month' %}selected{% endif %}>Theo tháng</option>
+                <option value="quarter" {% if time == 'quarter' %}selected{% endif %}>Theo quý</option>
+                <option value="year" {% if time == 'year' %}selected{% endif %}>Theo năm</option>
+            </select>
+        </div>
+        <div class="col-6 p-2">
+            <input type="number" placeholder="Nhập năm..." name="year" value="{{ year or '' }}" class="form-control" />
+        </div>
+    </div>
+    <div class="pt-2 pb-2">
+        <button class="btn btn-info">Thống kê</button>
+    </div>
 </form>
 
-<div class="row mb-5">
-    <div class="col-md-6">
-        <h5>Báo cáo doanh thu theo tháng</h5>
-        <table class="table table-bordered">
-            <tr><th>STT</th><th>Ngày</th><th>Số bệnh nhân</th><th>Doanh thu</th><th>Tỷ lệ</th></tr>
+<div class="row">
+    <div class="col-5">
+        <table class="table">
+            <tr>
+                <th>STT</th>
+                <th>
+                    {% if time == 'quarter' %}Quý
+                    {% elif time == 'year' %}Năm
+                    {% else %}Tháng{% endif %}
+                </th>
+                <th>Số bệnh nhân</th>
+                <th>Doanh thu (VNĐ)</th>
+                <th>Tỷ lệ</th>
+            </tr>
             {% for r in rev_stats %}
             <tr>
-                <td>{{ loop.index }}</td><td>{{ r[0] }}</td><td>{{ r[1] }}</td>
-                <td>{{ "{:,.0f}".format(r[2]) }}</td>
-                <td>{{ "%.1f"|format((r[2]/total_rev*100) if total_rev else 0) }}%</td>
+                <td>{{ loop.index }}</td>
+                <td>{{ r[0] | int }}</td>
+                <td>{{ r[1] or 0 }}</td>
+                <td>{{ "{:,.0f}".format(r[2] or 0) }}</td>
+                <td>{{ "%.1f"|format(((r[2] or 0) / total_rev * 100) if total_rev else 0) }}%</td>
             </tr>
             {% endfor %}
-            <tr><th colspan="3">Tổng doanh thu</th><th colspan="2">{{ "{:,.0f}".format(total_rev) }} VNĐ</th></tr>
+            <tr>
+                <th colspan="3">Tổng doanh thu</th>
+                <th colspan="2">{{ "{:,.0f}".format(total_rev or 0) }} VNĐ</th>
+            </tr>
         </table>
     </div>
-    <div class="col-md-6"><canvas id="revChart"></canvas></div>
+    <div class="col-7">
+        <canvas id="myChart1"></canvas>
+    </div>
 </div>
 
 <div class="row">
-    <div class="col-md-6">
-        <h5>Báo cáo sử dụng thuốc</h5>
-        <table class="table table-bordered">
-            <tr><th>STT</th><th>Thuốc</th><th>Đơn vị</th><th>Số lượng</th><th>Số lần dùng</th></tr>
+    <div class="col-5">
+        <table class="table">
+            <tr>
+                <th>STT</th>
+                <th>Thuốc</th>
+                <th>Đơn vị</th>
+                <th>Số lượng</th>
+                <th>Số lần dùng</th>
+            </tr>
             {% for m in med_stats %}
-            <tr><td>{{ loop.index }}</td><td>{{ m[0] }}</td><td>{{ m[1] }}</td><td>{{ m[2] }}</td><td>{{ m[3] }}</td></tr>
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ m[0] }}</td>
+                <td>{{ m[1] }}</td>
+                <td>{{ m[2] or 0 }}</td>
+                <td>{{ m[3] or 0 }}</td>
+            </tr>
             {% endfor %}
         </table>
     </div>
-    <div class="col-md-6"><canvas id="medChart"></canvas></div>
+    <div class="col-7">
+        <canvas id="myChart2"></canvas>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/draw.js') }}"></script>
 <script>
-new Chart(document.getElementById('revChart'), {
-    type: 'bar',
-    data: {
-        labels: [{% for r in rev_stats %}'{{ r[0] }}',{% endfor %}],
-        datasets: [{ label: 'Doanh thu (VNĐ)', data: [{% for r in rev_stats %}{{ r[2] }},{% endfor %}], backgroundColor: 'rgba(54, 162, 235, 0.7)' }]
+    let data = [];
+    let labels = [];
+    let data2 = [];
+    let labels2 = [];
+
+    {% for r in rev_stats %}
+        labels.push('{{ "Quý " if time == "quarter" else ("Năm " if time == "year" else "Tháng ") }}{{ r[0] | int }}');
+        data.push({{ r[2] or 0 }});
+    {% endfor %}
+
+    {% for m in med_stats %}
+        labels2.push('{{ m[0] }}');
+        data2.push({{ m[2] or 0 }});
+    {% endfor %}
+
+    window.onload = function() {
+        drawChart(data, labels, 'Doanh thu (VNĐ)', 'myChart1', 'bar');
+        drawChart(data2, labels2, 'Số lượng thuốc sử dụng', 'myChart2', 'pie');
     }
-});
-new Chart(document.getElementById('medChart'), {
-    type: 'doughnut',
-    data: {
-        labels: [{% for m in med_stats %}'{{ m[0] }}',{% endfor %}],
-        datasets: [{ data: [{% for m in med_stats %}{{ m[2] }},{% endfor %}], backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0'] }]
-    }
-});
 </script>
 {% endblock %}

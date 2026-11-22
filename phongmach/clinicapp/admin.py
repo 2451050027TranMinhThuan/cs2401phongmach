@@ -1,3 +1,4 @@
+from flask_admin.theme import Bootstrap4Theme
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
@@ -42,13 +43,24 @@ class QuyDinhView(AuthenticatedAdmin):
 class StatsView(AuthenticatedView):
     @expose('/')
     def index(self):
-        month = int(request.args.get('month', date.today().month))
-        year = int(request.args.get('year', date.today().year))
-        rev_stats = dao.stats_revenue_by_month(month, year)
-        total_rev = sum(r[2] for r in rev_stats) if rev_stats else 0
-        med_stats = dao.stats_medicine_by_month(month, year)
-        return self.render('admin/stats.html', month=month, year=year,
-                           rev_stats=rev_stats, total_rev=total_rev, med_stats=med_stats)
+        kw = request.args.get('kw')
+        time = request.args.get('time', 'month')
+        y = request.args.get('year')
+
+        if not y and time != 'year':
+            y = date.today().year
+
+        rev_stats = dao.stats_revenue_by_time(year=y, time=time)
+        total_rev = sum(r[2] for r in rev_stats if r[2]) if rev_stats else 0
+        med_stats = dao.stats_medicine_usage(kw=kw, year=y, time=time)
+
+        return self.render('admin/stats.html',
+                           kw=kw,
+                           time=time,
+                           year=y,
+                           rev_stats=rev_stats,
+                           total_rev=total_rev,
+                           med_stats=med_stats)
 
 
 class LogoutView(AuthenticatedView):
@@ -58,7 +70,7 @@ class LogoutView(AuthenticatedView):
         return redirect('/admin')
 
 
-admin = Admin(app=app, name='QUẢN TRỊ PHÒNG MẠCH', template_mode='bootstrap4', index_view=MyAdminIndexView())
+admin = Admin(app=app, name='QUẢN TRỊ PHÒNG MẠCH', theme=Bootstrap4Theme(), index_view=MyAdminIndexView())
 admin.add_view(ThuocView(Thuoc, db.session, name='Quản lý Thuốc'))
 admin.add_view(AuthenticatedAdmin(DonViThuoc, db.session, name='Đơn vị Thuốc'))
 admin.add_view(QuyDinhView(QuyDinh, db.session, name='Thay đổi Quy định'))

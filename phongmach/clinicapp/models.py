@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Date, DateTime, Enum, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Date, DateTime, Enum, Text, text
 from sqlalchemy.orm import relationship
 from clinicapp import db, app
 from flask_login import UserMixin
@@ -12,7 +12,7 @@ class UserRole(RoleEnum):
     NURSE = 2     # Y tá
     DOCTOR = 3    # Bác sĩ
     CASHIER = 4   # Thu ngân
-
+    PATIENT = 5
 
 class BaseModel(db.Model):
     __abstract__ = True
@@ -24,7 +24,7 @@ class User(BaseModel, UserMixin):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
     avatar = Column(String(100), default='https://res.cloudinary.com/dxxwcby8l/image/upload/v1688179242/hclq65mc6so7vdrbp7hz.jpg')
-    user_role = Column(Enum(UserRole), default=UserRole.NURSE)
+    user_role = Column(Enum(UserRole), default=UserRole.PATIENT)
     phieu_khams = relationship('PhieuKham', backref='bac_si', lazy=True)
 
     def __str__(self):
@@ -101,6 +101,7 @@ class HoaDon(BaseModel):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        db.session.execute(text("ALTER TABLE user MODIFY user_role ENUM('ADMIN','NURSE','DOCTOR','CASHIER','PATIENT')"))
 
         # Tạo tài khoản mẫu cho các vai trò (mật khẩu đều là: 123456)
         pw = str(hashlib.md5('123456'.encode('utf-8')).hexdigest())

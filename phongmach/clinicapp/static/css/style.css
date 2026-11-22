@@ -56,4 +56,5 @@ body {
 /* 3. Hero Banner & Thanh 3 chức năng vắt ngang */
 .hero-banner {
     background: linear-gradient(90deg, rgba(11, 22, 35, 0.82) 0%, rgba(11, 22, 35, 0.35) 100%),
-                url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1600&q=80') center/
+    url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1600&q=80') center
+}
