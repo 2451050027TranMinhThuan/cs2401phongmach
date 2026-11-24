@@ -28,9 +28,3 @@ urllib3==2.8.0
 Werkzeug==3.1.9
 WTForms==3.3.2
 yarl==1.25.1
-flask
-flask-sqlalchemy
-pymysql
-flask-login
-flask-admin
-twilio

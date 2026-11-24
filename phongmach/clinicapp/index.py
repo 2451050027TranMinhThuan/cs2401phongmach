@@ -102,7 +102,7 @@ def index():
             db.session.add(dsk)
             db.session.commit()
 
-            dao.send_sms_twilio(bn.so_dien_thoai, f"Phong mach Tam An: Ban da dat lich kham ngay {ngay_dat} thanh cong.")
+            dao.send_sms_twilio(bn.so_dien_thoai, f"Phong mach DATATU: Ban da dat lich kham ngay {ngay_dat} thanh cong.")
             flash(f'Đặt lịch khám ngày {ngay_dat} thành công! Tin nhắn SMS xác nhận đã được gửi.', 'success')
         return redirect(url_for('index'))
 
@@ -132,7 +132,7 @@ def nurse_page():
             db.session.add(dsk)
             db.session.commit()
 
-            dao.send_sms_twilio(bn.so_dien_thoai, f"Phong mach Tam An: Ban da dang ky kham ngay {ngay_kham} thanh cong.")
+            dao.send_sms_twilio(bn.so_dien_thoai, f"Phong mach DATATU: Ban da dang ky kham ngay {ngay_kham} thanh cong.")
             flash('Đã thêm bệnh nhân vào danh sách khám & gửi SMS!', 'success')
         return redirect(url_for('nurse_page', ngay_kham=ngay_str))
 
