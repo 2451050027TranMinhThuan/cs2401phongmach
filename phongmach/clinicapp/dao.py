@@ -40,7 +40,6 @@ def load_thuocs(kw=None):
 
 
 def send_sms_twilio(phone, message):
-    # Cấu hình Twilio API của bạn tại đây
     ACCOUNT_SID = "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     AUTH_TOKEN = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
     FROM_PHONE = "+1234567890"
@@ -90,6 +89,7 @@ def stats_medicine_usage(kw=None, year=None, time='month'):
 
     return query.group_by(Thuoc.id, Thuoc.ten_thuoc, DonViThuoc.ten_don_vi).all()
 
+
 def create_user(name, username, password):
     password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
     u = User(name=name.strip(),
@@ -98,3 +98,34 @@ def create_user(name, username, password):
              user_role=UserRole.PATIENT)
     db.session.add(u)
     db.session.commit()
+
+
+def get_or_create_benh_nhan(ho_ten, gioi_tinh, nam_sinh, dia_chi, so_dien_thoai):
+    sdt = so_dien_thoai.strip()
+    bn = BenhNhan.query.filter(BenhNhan.so_dien_thoai == sdt).first()
+    if bn:
+        bn.ho_ten = ho_ten.strip()
+        bn.gioi_tinh = gioi_tinh
+        bn.nam_sinh = int(nam_sinh)
+        bn.dia_chi = dia_chi.strip()
+    else:
+        bn = BenhNhan(
+            ho_ten=ho_ten.strip(),
+            gioi_tinh=gioi_tinh,
+            nam_sinh=int(nam_sinh),
+            dia_chi=dia_chi.strip(),
+            so_dien_thoai=sdt
+        )
+        db.session.add(bn)
+    db.session.flush()
+    return bn
+
+
+def load_ho_so_benh_an(kw=None):
+    query = BenhNhan.query.filter(BenhNhan.phieu_khams.any())
+    if kw:
+        kw = kw.strip()
+        query = query.filter(
+            (BenhNhan.ho_ten.contains(kw)) | (BenhNhan.so_dien_thoai.contains(kw))
+        )
+    return query.all()

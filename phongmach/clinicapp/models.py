@@ -107,9 +107,9 @@ if __name__ == '__main__':
         pw = str(hashlib.md5('123456'.encode('utf-8')).hexdigest())
         if not User.query.first():
             u1 = User(name='Quản Trị Viên', username='admin', password=pw, user_role=UserRole.ADMIN)
-            u2 = User(name='Y Tá Lan', username='yta', password=pw, user_role=UserRole.NURSE)
-            u3 = User(name='Bác Sĩ Hùng', username='bacsi', password=pw, user_role=UserRole.DOCTOR)
-            u4 = User(name='Thu Ngân Mai', username='thungan', password=pw, user_role=UserRole.CASHIER)
+            u2 = User(name='Y Tá Trâm', username='yta', password=pw, user_role=UserRole.NURSE)
+            u3 = User(name='Bác Sĩ Đạt', username='bacsi', password=pw, user_role=UserRole.DOCTOR)
+            u4 = User(name='Thu Ngân Thuận', username='thungan', password=pw, user_role=UserRole.CASHIER)
             db.session.add_all([u1, u2, u3, u4])
 
         # Tạo quy định mặc định

@@ -1,0 +1,91 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="text-primary mb-4">Hồ Sơ Bệnh Án (Bệnh Nhân Đã Khám)</h2>
+
+    <div class="row">
+        <!-- Cột trái: Danh sách bệnh nhân từng khám -->
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <strong>Danh sách bệnh nhân ({{ ds_benh_nhan|length }})</strong>
+                </div>
+                <div class="card-body">
+                    <form method="get" action="{{ url_for('medical_records_page') }}" class="d-flex mb-3">
+                        <input type="text" name="kw" value="{{ kw }}" class="form-control me-2"
+                               placeholder="Tìm theo tên hoặc SĐT...">
+                        <button type="submit" class="btn btn-outline-primary">Tìm</button>
+                    </form>
+
+                    <div class="list-group">
+                        {% for bn in ds_benh_nhan %}
+                        <a href="{{ url_for('medical_records_page', bn_id=bn.id, kw=kw) }}"
+                           class="list-group-item list-group-item-action {% if bn_chon and bn_chon.id == bn.id %}active{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ bn.ho_ten }}</h6>
+                                <small>Số lần khám: {{ bn.phieu_khams|length }}</small>
+                            </div>
+                            <small>SĐT: {{ bn.so_dien_thoai }} | Năm sinh: {{ bn.nam_sinh }} ({{ bn.gioi_tinh }})</small>
+                        </a>
+                        {% else %}
+                        <p class="text-muted text-center my-3">Chưa có bệnh nhân nào từng khám.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột phải: Chi tiết các lần khám & toa thuốc -->
+        <div class="col-md-7">
+            {% if bn_chon %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <strong>Bệnh án: {{ bn_chon.ho_ten }}</strong> — ĐC: {{ bn_chon.dia_chi }}
+                </div>
+                <div class="card-body">
+                    {% for pk in lich_su_kham %}
+                    <div class="border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between border-bottom pb-2 mb-2">
+                            <span class="fw-bold text-primary">Phiếu khám #{{ pk.id }} — Ngày: {{ pk.ngay_kham.strftime('%d/%m/%Y') }}</span>
+                            <span class="badge bg-secondary">BS: {{ pk.bac_si.name if pk.bac_si else 'N/A' }}</span>
+                        </div>
+                        <p class="mb-1"><strong>Triệu chứng:</strong> {{ pk.trieu_chung }}</p>
+                        <p class="mb-2"><strong>Chẩn đoán bệnh:</strong> <span class="text-danger fw-bold">{{ pk.du_doan_benh }}</span></p>
+
+                        <strong>Đơn thuốc đã kê:</strong>
+                        {% if pk.chi_tiet_toas %}
+                        <table class="table table-sm table-bordered bg-white mt-1 mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Tên thuốc</th>
+                                    <th>Số lượng</th>
+                                    <th>Cách dùng</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ct in pk.chi_tiet_toas %}
+                                <tr>
+                                    <td>{{ ct.thuoc.ten_thuoc }}</td>
+                                    <td>{{ ct.so_luong }} {{ ct.thuoc.don_vi.ten_don_vi }}</td>
+                                    <td>{{ ct.cach_dung }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <span class="text-muted">Không kê thuốc.</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-secondary text-center">
+                Chọn một bệnh nhân ở danh sách bên trái để xem chi tiết lịch sử khám và đơn thuốc.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

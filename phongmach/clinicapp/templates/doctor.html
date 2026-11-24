@@ -42,14 +42,24 @@
             <button type="submit" class="btn btn-primary">Lưu phiếu khám</button>
         </form>
 
-        <h6 class="mt-4">Lịch sử khám bệnh</h6>
+        <div class="d-flex justify-content-between align-items-center mt-4 mb-2">
+            <h6 class="mb-0">Lịch sử khám bệnh</h6>
+            <a href="{{ url_for('medical_records_page', bn_id=bn_chon.id) }}" class="btn btn-outline-primary btn-sm">
+                Xem chi tiết hồ sơ & đơn thuốc cũ
+            </a>
+        </div>
         <ul class="list-group">
             {% for ls in lich_su %}
             <li class="list-group-item">Ngày {{ ls.ngay_kham }}: {{ ls.trieu_chung }} - <b>{{ ls.du_doan_benh }}</b></li>
             {% endfor %}
         </ul>
         {% else %}
-        <div class="alert alert-info">Chọn một bệnh nhân ở cột bên trái để lập phiếu khám.</div>
+        <div class="alert alert-info d-flex justify-content-between align-items-center">
+            <span>Chọn một bệnh nhân ở cột bên trái để lập phiếu khám.</span>
+            <a href="{{ url_for('medical_records_page') }}" class="btn btn-primary btn-sm">
+                Xem Hồ sơ bệnh án
+            </a>
+        </div>
         {% endif %}
     </div>
 </div>

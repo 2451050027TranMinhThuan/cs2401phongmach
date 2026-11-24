@@ -90,15 +90,13 @@ def index():
         if len(ds_kham) >= qd.so_benh_nhan_toi_da:
             flash(f'Rất tiếc! Ngày {ngay_dat} đã đủ {qd.so_benh_nhan_toi_da} bệnh nhân. Vui lòng chọn ngày khác!', 'danger')
         else:
-            bn = BenhNhan(
+            bn = dao.get_or_create_benh_nhan(
                 ho_ten=request.form.get('ho_ten'),
                 gioi_tinh=request.form.get('gioi_tinh'),
-                nam_sinh=int(request.form.get('nam_sinh')),
+                nam_sinh=request.form.get('nam_sinh'),
                 dia_chi=request.form.get('dia_chi'),
                 so_dien_thoai=request.form.get('so_dien_thoai')
             )
-            db.session.add(bn)
-            db.session.flush()
 
             dsk = DanhSachKham(ngay_kham=ngay_dat, benh_nhan_id=bn.id)
             db.session.add(dsk)
@@ -122,15 +120,13 @@ def nurse_page():
         if len(ds_kham) >= qd.so_benh_nhan_toi_da:
             flash(f'Quy định: Mỗi ngày chỉ khám tối đa {qd.so_benh_nhan_toi_da} bệnh nhân!', 'danger')
         else:
-            bn = BenhNhan(
+            bn = dao.get_or_create_benh_nhan(
                 ho_ten=request.form.get('ho_ten'),
                 gioi_tinh=request.form.get('gioi_tinh'),
-                nam_sinh=int(request.form.get('nam_sinh')),
+                nam_sinh=request.form.get('nam_sinh'),
                 dia_chi=request.form.get('dia_chi'),
                 so_dien_thoai=request.form.get('so_dien_thoai')
             )
-            db.session.add(bn)
-            db.session.flush()
 
             dsk = DanhSachKham(ngay_kham=ngay_kham, benh_nhan_id=bn.id)
             db.session.add(dsk)
@@ -200,6 +196,22 @@ def cashier_page():
         return redirect(url_for('cashier_page'))
 
     return render_template('cashier.html', phieu_chua_tt=phieu_chua_tt)
+@app.route('/records')
+@login_required
+def medical_records_page():
+    kw = request.args.get('kw')
+    bn_id = request.args.get('bn_id')
+
+    ds_benh_nhan = dao.load_ho_so_benh_an(kw=kw)
+    bn_chon = BenhNhan.query.get(bn_id) if bn_id else None
+    lich_su_kham = PhieuKham.query.filter_by(benh_nhan_id=bn_id)\
+                                  .order_by(PhieuKham.ngay_kham.desc(), PhieuKham.id.desc()).all() if bn_id else []
+
+    return render_template('records.html',
+                           ds_benh_nhan=ds_benh_nhan,
+                           bn_chon=bn_chon,
+                           lich_su_kham=lich_su_kham,
+                           kw=kw or '')
 
 
 if __name__ == '__main__':
